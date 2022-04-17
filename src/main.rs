@@ -34,6 +34,8 @@ fn main() {
             scaler.offset -= (mouse_pos - last_mid_mouse_click) * scaler.scale;
         } else if rl.is_key_pressed(KeyboardKey::KEY_R) {
             vectors.pop();
+        } else if rl.is_key_pressed(KeyboardKey::KEY_C) {
+            vectors.clear();
         }
 
         let scroll = rl.get_mouse_wheel_move();
