@@ -1,10 +1,7 @@
 mod scaler;
 
-use raylib::prelude::MouseButton;
 use raylib::prelude::*;
-
 use std::f32::consts::PI;
-use std::vec::Vec;
 
 const WIDTH: i32 = 1280;
 const HEIGHT: i32 = 720;
@@ -79,14 +76,14 @@ fn main() {
             // in the process of holding, draw vector from start to mouse
             draw_arrow(
                 &mut d,
-                &Vector2 {
-                    x: left_holding_x as f32,
-                    y: left_holding_y as f32,
-                },
-                &Vector2 {
-                    x: mouse_x as f32,
-                    y: mouse_y as f32,
-                },
+                &Vector2::new(
+                    left_holding_x as f32,
+                    left_holding_y as f32,
+                ),
+                &Vector2::new(
+                    mouse_x as f32,
+                    mouse_y as f32,
+                ),
                 7.3,
                 Color::RED,
             )
