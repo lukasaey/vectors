@@ -1,10 +1,13 @@
 mod scaler;
+mod world_vector;
 
+use crate::world_vector::WorldVector;
 use raylib::prelude::*;
 use std::f32::consts::PI;
 
 const SCROLL_STEP_DOWN: f32 = 1.1;
 const SCROLL_STEP_UP: f32 = 0.9;
+const VECTOR_ACCELERATION: f32 = 0.25;
 
 fn main() {
     let (mut rl, thread) = raylib::init()
@@ -18,7 +21,9 @@ fn main() {
 
     let mut last_mid_mouse_click = Vector2::new(0.0, 0.0);
 
-    let mut vectors: Vec<(Vector2, Vector2)> = Vec::new();
+    let mut simulating = false;
+
+    let mut vectors: Vec<WorldVector> = Vec::new();
 
     let mut scaler = scaler::Scaler {
         scale: 1.0,
@@ -36,12 +41,14 @@ fn main() {
             vectors.pop();
         } else if rl.is_key_pressed(KeyboardKey::KEY_C) {
             vectors.clear();
+        } else if rl.is_key_pressed(KeyboardKey::KEY_SPACE) {
+            simulating = !simulating;
         }
 
         let scroll = rl.get_mouse_wheel_move();
 
         if scroll != 0.0 {
-            let before_scale = scaler.to_world(mouse_pos);
+            let before_scale = scaler.to_world(&mouse_pos);
 
             let step = if scroll > 0.0 {
                 SCROLL_STEP_UP
@@ -54,7 +61,7 @@ fn main() {
                 scaler.scale = new_scale;
             }
 
-            let after_scale = scaler.to_world(mouse_pos);
+            let after_scale = scaler.to_world(&mouse_pos);
 
             scaler.offset += before_scale - after_scale;
         }
@@ -62,6 +69,13 @@ fn main() {
         last_mid_mouse_click = mouse_pos;
 
         let mouse_left_down = rl.is_mouse_button_down(MouseButton::MOUSE_LEFT_BUTTON);
+
+        if simulating {
+            // update all vector positions
+            for v in vectors.iter_mut() {
+                v.update();
+            }
+        }
 
         let mut d = rl.begin_drawing(&thread);
 
@@ -71,27 +85,33 @@ fn main() {
             left_holding = true;
         } else if mouse_left_down && left_holding {
             // in the process of holding, draw vector from start to mouse
-            draw_arrow(&mut d, &left_holding_mouse_pos, &mouse_pos, 7.3, Color::RED)
+            draw_arrow(
+                &mut d,
+                &left_holding_mouse_pos,
+                &mouse_pos,
+                7.3,
+                Color::RED,
+            )
         } else if !mouse_left_down && left_holding {
             // finished dragging, add the vector to vectors
-            vectors.push((
-                scaler.to_world(left_holding_mouse_pos),
-                scaler.to_world(mouse_pos),
+            vectors.push(WorldVector::new(
+                scaler.to_world(&left_holding_mouse_pos),
+                scaler.to_world(&mouse_pos) - scaler.to_world(&left_holding_mouse_pos),
             ));
             left_holding = false;
         }
 
         d.clear_background(Color::BLACK);
         for vec in &vectors {
-            draw_arrow(
-                &mut d,
-                &scaler.to_screen(vec.0),
-                &scaler.to_screen(vec.1),
-                7.3,
-                Color::BLUE,
-            );
+            draw_arrow_v(&mut d, &scaler.to_screen_v(vec), 7.3, Color::BLUE);
         }
     }
+}
+
+fn draw_arrow_v(d: &mut RaylibDrawHandle, v: &WorldVector, radius: f32, color: Color) {
+    let p0 = v.root;
+    let p1 = v.root + v.velocity;
+    draw_arrow(d, &p0, &p1, radius, color);
 }
 
 fn draw_arrow(d: &mut RaylibDrawHandle, p0: &Vector2, p1: &Vector2, radius: f32, color: Color) {
