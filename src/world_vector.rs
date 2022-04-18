@@ -1,5 +1,3 @@
-use crate::VECTOR_ACCELERATION;
-use crate::scaler::Scaler;
 use raylib::prelude::*;
 
 pub struct WorldVector {
@@ -15,7 +13,7 @@ impl WorldVector {
         }
     }
 
-    pub fn update(&mut self) {
-        self.root += self.velocity * VECTOR_ACCELERATION;
+    pub fn update(&mut self, dt: &f32) {
+        self.root += self.velocity * *dt;
     }
 }

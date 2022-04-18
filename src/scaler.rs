@@ -6,6 +6,7 @@ pub struct Scaler {
     pub offset: Vector2,
 }
 
+#[allow(dead_code)]
 impl Scaler {
     pub fn to_screen(&self, v: &Vector2) -> Vector2 {
         (*v - self.offset) / self.scale
@@ -23,3 +24,4 @@ impl Scaler {
         WorldVector::new(self.to_world(&v.root), v.velocity * self.scale)
     }
 }
+
